@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrónica Catálogo de Formación</title>
+    <!-- Tailwind CSS para diseño moderno y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuente Inter como respaldo elegante a la tipografía del sistema Apple -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        eci: {
+                            green: '#00784E',       // Verde Corporativo Principal
+                            greenHover: '#005C3B',  // Verde Bosque (Hover / Profundidad)
+                            bg: '#F4F8F6',          // Niebla Salvia (Fondo de página)
+                            card: '#FFFFFF',        // Blanco Puro (Tarjetas)
+                            mint: '#E6F2ED',        // Menta Pálido (Superficies secundarias / acentos suaves)
+                            text: '#141F1B',        // Antracita (Texto principal)
+                            secondary: '#52635C',   // Gris Verdoso Oscuro (Texto secundario)
+                            border: '#D5E3DD',      // Gris Verdoso (Bordes y divisores)
+                        }
+                    },
+                    boxShadow: {
+                        'eci': '0 2px 12px rgba(0, 120, 78, 0.04)',
+                        'eci-card': '0 4px 20px rgba(0, 120, 78, 0.05)',
+                        'eci-card-hover': '0 14px 32px rgba(0, 120, 78, 0.12)',
+                        'eci-modal': '0 24px 60px rgba(20, 31, 27, 0.18)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos base y scrollbar limpio */
+        body {
+            background-color: #F4F8F6;
+            color: #141F1B;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Ocultar barra de desplazamiento en filtros horizontales móviles */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Transición suave para tarjetas */
+        .course-card {
+            transition: transform 0.28s cubic-bezier(0.25, 0.1, 0.25, 1), box-shadow 0.28s cubic-bezier(0.25, 0.1, 0.25, 1), border-color 0.28s ease;
+            border: 1px solid #D5E3DD;
+        }
+        .course-card:hover {
+            transform: translateY(-4px);
+            border-color: #00784E;
+        }
+
+        /* Animación de entrada para modales */
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.97) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-animate {
+            animation: modalFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-[#00784E] selection:text-white">
+
+    <!-- =====================================================================
+         BARRA DE NAVEGACIÓN SUPERIOR EN VERDE CORPORATIVO (#00784E)
+    ====================================================================== -->
+    <header class="sticky top-0 z-30 bg-[#00784E]/95 backdrop-blur-md border-b border-[#005C3B] shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+            <!-- Logo / Identidad -->
+<div class="flex items-center gap-3.5">
+    <div class="h-10 sm:h-11 bg-white px-2.5 py-1.5 rounded-xl flex items-center justify-center overflow-hidden shadow-sm">
+        <img src="LOGO-EL-CORTE.jpg" alt="Logo El Corte" class="h-full w-auto object-contain" />
+    </div>
+                <div class="border-l border-white/20 pl-3.5 py-0.5">
+                    <span class="font-semibold text-base sm:text-lg tracking-tight text-white block leading-none">Formación +</span>
+                    <span class="text-[11px] text-[#E6F2ED] font-medium tracking-wide uppercase mt-1 block">Catálogo de Electrónica</span>
+                </div>
+            </div>
+
+            <!-- Interruptor Discreto de Modo Editor / Administrador -->
+            <div class="flex items-center gap-3">
+                <label for="editorToggle" class="inline-flex items-center gap-2.5 cursor-pointer select-none px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 transition-colors" title="Activa este modo para añadir, editar o exportar cursos">
+                    <span class="text-xs font-medium text-white hidden sm:inline">Modo Editor</span>
+                    <span class="text-xs font-medium text-white sm:hidden">Editor</span>
+                    <div class="relative">
+                        <input type="checkbox" id="editorToggle" class="sr-only peer" onchange="handleEditorToggleAttempt(this)">
+                        <div class="w-10 h-6 bg-[#005C3B] rounded-full peer peer-checked:bg-white transition-colors"></div>
+                        <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white peer-checked:bg-[#00784E] rounded-full shadow-sm transition-transform peer-checked:translate-x-4"></div>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <!-- =====================================================================
+         BARRA DE ADMINISTRACIÓN (SOLO VISIBLE EN MODO EDITOR)
+    ====================================================================== -->
+    <div id="adminBar" class="hidden bg-[#141F1B] text-white border-b border-white/10 transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <p class="text-xs sm:text-sm text-gray-200">
+                    <strong class="text-white font-semibold">Modo Editor activo:</strong> Los cambios se guardan automáticamente en tu navegador.
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <button onclick="openCourseForm()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-[#00784E] hover:bg-[#005C3B] text-white text-xs font-medium transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    Añadir Curso
+                </button>
+                <button onclick="openExportModal()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    Exportar Código
+                </button>
+                <button onclick="openResetConfirm()" class="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-full text-gray-300 hover:text-white hover:bg-white/10 text-xs transition-colors" title="Restaurar los cursos originales del archivo">
+                    Restaurar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         SECCIÓN HERO & BUSCADOR CON DEGRADADO SUTIL
+    ====================================================================== -->
+    <main class="flex-grow">
+        <div class="bg-gradient-to-b from-[#E6F2ED]/80 via-[#E6F2ED]/30 to-transparent">
+            <section class="pt-10 pb-8 sm:pt-14 sm:pb-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                <div class="max-w-3xl">
+                    <h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-[#141F1B] leading-[1.1]">
+                        Impulsa tu talento. <br class="hidden sm:inline">
+                        <span class="text-[#00784E]">Explora el catálogo formativo.</span>
+                    </h1>
+                    <p class="mt-4 text-base sm:text-lg text-[#52635C] leading-relaxed font-normal">
+                        Programas diseñados para potenciar tus habilidades técnicas y comerciales. Filtra por área o modalidad y consulta el temario detallado de cada sesión.
+                    </p>
+                </div>
+
+                <!-- Barra de Búsqueda + Filtros -->
+                <div class="mt-8 space-y-5">
+                    <!-- Buscador estilo Spotlight -->
+                    <div class="relative max-w-2xl">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-[#00784E]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Buscar cursos por título, temática o palabra clave..." 
+                            class="w-full pl-11 pr-10 py-3.5 bg-white border border-[#D5E3DD] rounded-2xl text-sm sm:text-base text-[#141F1B] placeholder-[#52635C]/70 shadow-eci focus:outline-none focus:ring-2 focus:ring-[#00784E] focus:border-transparent transition-all"
+                        >
+                        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#52635C] hover:text-[#141F1B]">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Contenedor de Filtros (Categorías + Modalidad/Nivel) -->
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-2 border-t border-[#D5E3DD]">
+                        <!-- Píldoras de Categoría (Generadas dinámicamente) -->
+                        <div id="categoryFilters" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                            <!-- Se rellena por JS -->
+                        </div>
+
+                        <!-- Filtros Secundarios (Modalidad y Nivel) -->
+                        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                            <div class="relative">
+                                <select id="modalityFilter" class="appearance-none bg-white border border-[#D5E3DD] text-[#141F1B] text-xs sm:text-sm font-medium rounded-full pl-4 pr-9 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00784E] cursor-pointer hover:border-[#00784E]/50 transition-colors">
+                                    <option value="Todas">Modalidad: Todas</option>
+                                    <option value="Online">Online</option>
+                                    <option value="Presencial">Presencial</option>
+                                    <option value="Aula Virtual">Aula Virtual</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#00784E]">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <select id="levelFilter" class="appearance-none bg-white border border-[#D5E3DD] text-[#141F1B] text-xs sm:text-sm font-medium rounded-full pl-4 pr-9 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00784E] cursor-pointer hover:border-[#00784E]/50 transition-colors">
+                                    <option value="Todos">Nivel: Todos</option>
+                                    <option value="Básico">Básico</option>
+                                    <option value="Intermedio">Intermedio</option>
+                                    <option value="Avanzado">Avanzado</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#00784E]">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- =====================================================================
+             GRID DE CURSOS
+        ====================================================================== -->
+        <section class="px-4 sm:px-6 lg:px-8 pb-20 max-w-7xl mx-auto">
+            <!-- Contador de resultados -->
+            <div class="flex items-center justify-between mb-6 pb-3 border-b border-[#D5E3DD]">
+                <p id="resultsCount" class="text-xs sm:text-sm font-medium text-[#52635C]">Mostrando cursos...</p>
+                <button id="resetFiltersBtn" onclick="resetAllFilters()" class="hidden text-xs sm:text-sm font-medium text-[#00784E] hover:text-[#005C3B] hover:underline">
+                    Limpiar filtros
+                </button>
+            </div>
+
+            <!-- Rejilla responsiva -->
+            <div id="coursesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Las tarjetas se renderizan aquí mediante JavaScript -->
+            </div>
+
+            <!-- Estado vacío cuando no hay coincidencias -->
+            <div id="emptyState" class="hidden text-center py-20 px-4 bg-white rounded-[20px] shadow-eci-card border border-[#D5E3DD]">
+                <div class="w-14 h-14 rounded-full bg-[#E6F2ED] text-[#00784E] flex items-center justify-center mx-auto mb-4 border border-[#D5E3DD]">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-[#141F1B]">No hemos encontrado cursos con esos criterios</h3>
+                <p class="mt-1.5 text-sm text-[#52635C] max-w-md mx-auto">Prueba a buscar con otras palabras clave o restablece los filtros de categoría, modalidad y nivel.</p>
+                <button onclick="resetAllFilters()" class="mt-5 px-5 py-2.5 rounded-full bg-[#00784E] hover:bg-[#005C3B] text-white text-sm font-medium transition-colors">
+                    Ver todos los cursos
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- =====================================================================
+         PIE DE PÁGINA MINIMALISTA
+    ====================================================================== -->
+    <footer class="bg-white border-t border-[#D5E3DD] py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#52635C]">
+            <p>© <span id="currentYear"></span> Óscar Domínguez Infantes - Departamento de Formación de Electrónica. Todos los derechos reservados.</p>
+            <div class="flex items-center gap-5">
+                <button onclick="toggleEditorFromFooter()" class="text-[#00784E] hover:text-[#005C3B] font-medium transition-colors">Gestión del catálogo</button>
+                <span class="text-[#D5E3DD]">•</span>
+                <span>Actualizado periódicamente</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- =====================================================================
+         MODAL DE AUTENTICACIÓN (LOGIN MODO EDITOR)
+    ====================================================================== -->
+    <div id="loginModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#141F1B]/50 backdrop-blur-sm" onclick="closeLoginModal(false)"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-md bg-white rounded-[24px] shadow-eci-modal overflow-hidden modal-animate p-6 sm:p-8 border border-[#D5E3DD]">
+                <div class="text-center mb-6">
+                    <div class="w-12 h-12 rounded-full bg-[#E6F2ED] text-[#00784E] flex items-center justify-center mx-auto mb-3 shadow-sm border border-[#D5E3DD]">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-[#141F1B]">Acceso Modo Editor</h3>
+                    <p class="text-xs text-[#52635C] mt-1">Introduce tus credenciales de administrador para gestionar el catálogo.</p>
+                </div>
+
+                <form onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Usuario</label>
+                        <input type="text" id="loginUser" required autocomplete="username" placeholder="Nombre de usuario" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Contraseña</label>
+                        <input type="password" id="loginPass" required autocomplete="current-password" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                    </div>
+                    <div id="loginError" class="hidden text-xs text-rose-600 font-medium text-center">
+                        Usuario o contraseña incorrectos.
+                    </div>
+                    <div class="pt-2 flex items-center gap-3">
+                        <button type="button" onclick="closeLoginModal(false)" class="flex-1 py-2.5 rounded-full border border-[#D5E3DD] text-sm font-medium text-[#141F1B] hover:bg-[#E6F2ED] transition-colors">Cancelar</button>
+                        <button type="submit" class="flex-1 py-2.5 rounded-full bg-[#00784E] hover:bg-[#005C3B] text-white text-sm font-medium shadow-sm transition-colors">Entrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 1: DETALLE DEL CURSO Y TEMARIO COMPLETO
+    ====================================================================== -->
+    <div id="detailModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#141F1B]/50 backdrop-blur-sm transition-opacity" onclick="closeDetailModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div class="relative w-full max-w-2xl bg-white rounded-[24px] shadow-eci-modal overflow-hidden modal-animate border border-[#D5E3DD]">
+                <div class="h-1.5 w-full bg-[#00784E]"></div>
+                <div class="px-6 sm:px-8 pt-6 pb-5 border-b border-[#D5E3DD] flex items-start justify-between gap-4">
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2 mb-2.5" id="modalBadges"></div>
+                        <h2 id="modalTitle" class="text-2xl sm:text-3xl font-bold tracking-tight text-[#141F1B] leading-tight">Título del Curso</h2>
+                    </div>
+                    <button onclick="closeDetailModal()" class="w-9 h-9 rounded-full bg-[#F4F8F6] hover:bg-[#E6F2ED] text-[#52635C] hover:text-[#141F1B] flex items-center justify-center shrink-0 transition-colors" aria-label="Cerrar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="px-6 sm:px-8 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-[#E6F2ED] border border-[#D5E3DD]">
+                        <div>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-[#00784E] block">Duración</span>
+                            <span id="modalDuration" class="text-sm font-semibold text-[#141F1B] mt-0.5 block">-</span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-[#00784E] block">Disponibilidad</span>
+                            <span id="modalDate" class="text-sm font-semibold text-[#141F1B] mt-0.5 block">-</span>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-[#00784E] block">Dirigido a</span>
+                            <span id="modalAudience" class="text-sm font-semibold text-[#141F1B] mt-0.5 block">-</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-[#52635C] mb-2">Sobre este programa</h3>
+                        <p id="modalDescription" class="text-sm sm:text-base text-[#141F1B] leading-relaxed"></p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-[#52635C] mb-3">Temario del curso</h3>
+                        <div id="modalSyllabus" class="space-y-2.5"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 border-t border-[#D5E3DD]">
+                        <div>
+                            <h3 class="text-sm font-semibold uppercase tracking-wider text-[#52635C] mb-2.5">Objetivos clave</h3>
+                            <ul id="modalObjectives" class="space-y-2 text-sm text-[#141F1B]"></ul>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-semibold uppercase tracking-wider text-[#52635C] mb-2.5">Requisitos previos</h3>
+                            <p id="modalRequirements" class="text-sm text-[#52635C] leading-relaxed bg-[#F4F8F6] border border-[#D5E3DD] p-3.5 rounded-xl"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 sm:px-8 py-4 bg-[#F4F8F6] border-t border-[#D5E3DD] flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <span class="text-xs text-[#52635C]">Plazas sujetas a disponibilidad interna</span>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <button onclick="closeDetailModal()" class="flex-1 sm:flex-none px-5 py-2.5 rounded-full border border-[#D5E3DD] bg-white hover:bg-[#E6F2ED]/50 text-sm font-medium text-[#141F1B] transition-colors">Cerrar</button>
+                        <button id="enrollActionBtn" onclick="handleEnroll()" class="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-[#00784E] hover:bg-[#005C3B] text-white text-sm font-medium shadow-sm transition-all flex items-center justify-center gap-2">
+                            <span>Solicitar plaza</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 2: FORMULARIO AÑADIR / EDITAR CURSO
+    ====================================================================== -->
+    <div id="formModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#141F1B]/50 backdrop-blur-sm" onclick="closeCourseForm()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-2xl bg-white rounded-[24px] shadow-eci-modal overflow-hidden modal-animate border border-[#D5E3DD]">
+                <div class="px-6 py-5 border-b border-[#D5E3DD] bg-[#F4F8F6] flex items-center justify-between">
+                    <h3 id="formModalTitle" class="text-xl font-bold text-[#141F1B]">Añadir Nuevo Curso</h3>
+                    <button onclick="closeCourseForm()" class="w-8 h-8 rounded-full bg-white hover:bg-[#E6F2ED] text-[#52635C] border border-[#D5E3DD] flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form id="courseForm" onsubmit="saveCourseForm(event)" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                    <input type="hidden" id="editCourseId">
+                    
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Título del curso *</label>
+                        <input type="text" id="fieldTitle" required placeholder="Ej. Productividad Avanzada con IA" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Área / Categoría *</label>
+                            <select id="fieldCategory" required class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                                <option value="Electrónica">Electrónica</option>
+                                <option value="Televisión">Televisión</option>
+                                <option value="Telefonía">Telefonía</option>
+                                <option value="Sonido">Sonido</option>
+                                <option value="Fotografía">Fotografía</option>
+                                <option value="Informática">Informática</option>
+                                <option value="Videojuegos">Videojuegos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Modalidad *</label>
+                            <select id="fieldModality" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                                <option value="Online">Online</option>
+                                <option value="Presencial">Presencial</option>
+                                <option value="Aula Virtual">Aula Virtual</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Nivel *</label>
+                            <select id="fieldLevel" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                                <option value="Básico">Básico</option>
+                                <option value="Intermedio">Intermedio</option>
+                                <option value="Avanzado">Avanzado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Duración *</label>
+                            <input type="text" id="fieldDuration" required placeholder="Ej. 4 horas" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Fecha / Disponibilidad *</label>
+                            <input type="text" id="fieldDate" required placeholder="Ej. Convocatoria abierta" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Público objetivo</label>
+                            <input type="text" id="fieldAudience" placeholder="Ej. Todos los equipos" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Resumen corto *</label>
+                        <textarea id="fieldSummary" required rows="2" placeholder="Breve descripción..." class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Descripción completa</label>
+                        <textarea id="fieldDescription" rows="2" placeholder="Explicación detallada..." class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Temario por módulos (uno por línea) *</label>
+                        <textarea id="fieldSyllabus" required rows="4" placeholder="Módulo 1: Introducción&#10;Módulo 2: Práctica" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#00784E]"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Objetivos (uno por línea)</label>
+                            <textarea id="fieldObjectives" rows="3" placeholder="Objetivo 1&#10;Objetivo 2" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]"></textarea>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Requisitos previos</label>
+                                <input type="text" id="fieldRequirements" placeholder="Ej. Ninguno" class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-[#52635C] mb-1.5">Enlace de inscripción (opcional)</label>
+                                <input type="url" id="fieldLink" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl border border-[#D5E3DD] text-sm focus:outline-none focus:ring-2 focus:ring-[#00784E]">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-[#D5E3DD] flex items-center justify-end gap-3">
+                        <button type="button" onclick="closeCourseForm()" class="px-5 py-2.5 rounded-full border border-[#D5E3DD] text-sm font-medium text-[#141F1B] hover:bg-[#F4F8F6]">Cancelar</button>
+                        <button type="submit" class="px-6 py-2.5 rounded-full bg-[#00784E] hover:bg-[#005C3B] text-white text-sm font-medium shadow-sm">Guardar Curso</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 3: EXPORTAR CÓDIGO
+    ====================================================================== -->
+    <div id="exportModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#141F1B]/50 backdrop-blur-sm" onclick="closeExportModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-2xl bg-white rounded-[24px] shadow-eci-modal overflow-hidden modal-animate border border-[#D5E3DD]">
+                <div class="px-6 py-5 border-b border-[#D5E3DD] bg-[#F4F8F6] flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-[#141F1B]">Exportar Catálogo Actualizado</h3>
+                        <p class="text-xs text-[#52635C] mt-0.5">Copia este bloque y actualiza tu archivo HTML para GitHub Pages.</p>
+                    </div>
+                    <button onclick="closeExportModal()" class="w-8 h-8 rounded-full bg-white hover:bg-[#E6F2ED] text-[#52635C] border border-[#D5E3DD] flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <textarea id="exportCodeArea" readonly rows="11" class="w-full p-4 rounded-xl bg-[#141F1B] text-emerald-300 font-mono text-xs focus:outline-none select-all"></textarea>
+                    <div class="flex items-center justify-end gap-3">
+                        <button onclick="closeExportModal()" class="px-5 py-2.5 rounded-full border border-[#D5E3DD] text-sm font-medium text-[#141F1B] hover:bg-[#F4F8F6]">Cerrar</button>
+                        <button onclick="copyExportCode()" class="px-6 py-2.5 rounded-full bg-[#00784E] hover:bg-[#005C3B] text-white text-sm font-medium shadow-sm flex items-center gap-2">
+                            <span>Copiar código</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL 4: CONFIRMACIÓN
+    ====================================================================== -->
+    <div id="confirmModal" class="hidden fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-[#141F1B]/50 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-sm bg-white rounded-[22px] shadow-eci-modal p-6 text-center modal-animate border border-[#D5E3DD]">
+                <h3 id="confirmTitle" class="text-lg font-bold text-[#141F1B]">¿Estás seguro?</h3>
+                <p id="confirmMessage" class="text-sm text-[#52635C] mt-1.5">Esta acción no se puede deshacer.</p>
+                <div class="mt-6 flex items-center gap-3">
+                    <button onclick="closeConfirmModal()" class="flex-1 py-2.5 rounded-full border border-[#D5E3DD] text-sm font-medium text-[#141F1B] hover:bg-[#F4F8F6]">Cancelar</button>
+                    <button id="confirmExecuteBtn" class="flex-1 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-medium">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         NOTIFICACIÓN TOAST
+    ====================================================================== -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-[#141F1B] text-white px-5 py-3 rounded-full shadow-lg flex items-center gap-2.5 text-sm font-medium border border-white/10">
+            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span id="toastMessage">Acción completada</span>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         LÓGICA JAVASCRIPT
+    ====================================================================== -->
+    <script>
+        const AREAS_OFICIALES = [
+            "Todas",
+            "Electrónica",
+            "Televisión",
+            "Telefonía",
+            "Sonido",
+            "Fotografía",
+            "Informática",
+            "Videojuegos"
+        ];
+
+       const CURSOS_DATA = [
+    {
+        "id": "curso-1794756339204",
+        "titulo": "VIDEOJUEGOS. INTEGRACIÓN EN LA 21 PARA VVFF",
+        "categoria": "Videojuegos",
+        "modalidad": "Presencial",
+        "nivel": "Intermedio",
+        "duracion": "7 horas",
+        "fecha": "Próxima edición: Pendiente",
+        "publico": "Todos",
+        "resumen": "Videojuegos se  está incorporando a la división 21 de manera paulatina. La formación del personal de la 21 en aspectos básicos es fundamental para conocer lo mínimo indispensable que les permita vender un producto en condiciones. Esa formación puede ser impartida por los VVFF regionales bajo las pautas que este curso les ofrece.",
+        "descripcion": "El curso se realizara en las instalaciones situadas en la Avenida del Cardenal Herrera Oria 242, edificio A el 25/12/2026 en horario de 10 a 18 horas.",
+        "temario": [
+            "Videojuegos. Integración en la 21 para VVFF."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/d8bdbb87a19c1001e238ca421e950000?type=9882927d138b100019b6a2df1a46018b"
+    },
+    {
+        "id": "curso-1794756211284",
+        "titulo": "ELECTRÓNICA. FOTOGRAFÍA LUMIX",
+        "categoria": "Fotografía",
+        "modalidad": "Presencial",
+        "nivel": "Intermedio",
+        "duracion": "1 hora",
+        "fecha": "Próxima edición: Pendiente",
+        "publico": "Todos",
+        "resumen": "Las nuevas cámaras de fotografía de la firma LUMIX ofrecen características y prestaciones nuevas. Con esta formación conocerás lo básico para acometer su venta.",
+        "descripcion": "Las nuevas cámaras de fotografía de la firma LUMIX ofrecen características y prestaciones nuevas. Con esta formación conocerás lo básico para acometer su venta.",
+        "temario": [
+            "Fotografía Lumix."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/34d4ce473ccf1000e927c86897080000?type=9882927d138b100019b6a2df1a46018b"
+    },
+    {
+        "id": "curso-1794756114364",
+        "titulo": "ELECTRÓNICA. EXPOSICIÓN SONOS",
+        "categoria": "Sonido",
+        "modalidad": "Aula Virtual",
+        "nivel": "Intermedio",
+        "duracion": "2 horas",
+        "fecha": "Próxima edición: Pendiente de convocar",
+        "publico": "Todos",
+        "resumen": "Un repaso a los productos de la firma Sonos que permita a los vendedores a conocer el producto más significativo de la exposición.",
+        "descripcion": "Un repaso a los productos de la firma Sonos que permita a los vendedores a conocer el producto más significativo de la exposición.",
+        "temario": [
+            "Electrónica. Exposición Sonos."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/b10c471586ec1000a917bd10a9380001?type=9882927d138b100019b6a2df1a46018b"
+    },
+    {
+        "id": "curso-1794755927950",
+        "titulo": "IMAGEN Y SONIDO.HISENSE NUEVA GAMA TV",
+        "categoria": "Televisión",
+        "modalidad": "Online",
+        "nivel": "Intermedio",
+        "duracion": "1 hora",
+        "fecha": "Próxima edición: Pendiente de convocar",
+        "publico": "Todos",
+        "resumen": "No te puedes perder esta formación de novedades de la firma Hisense en el ámbito de los televisores. Nuevos modelos, nuevas prestaciones... nuevas posibilidades de venta.",
+        "descripcion": "No te puedes perder esta formación de novedades de la firma Hisense en el ámbito de los televisores. Nuevos modelos, nuevas prestaciones... nuevas posibilidades de venta.",
+        "temario": [
+            "Imagen y sonido. Hisense nueva gama TV."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": ""
+    },
+    {
+        "id": "curso-1794755765592",
+        "titulo": "ELECTRÓNICA. MIS APUNTES DE APPLE. TIPS QUE TE VAN A AYUDAR",
+        "categoria": "Electrónica",
+        "modalidad": "Online",
+        "nivel": "Intermedio",
+        "duracion": "10 minutos",
+        "fecha": "Acceso inmediato",
+        "publico": "Todos",
+        "resumen": "En Electrónica, saber las características técnicas no basta para resolver múltiples situaciones que día a día encuentras en la tienda. Y menos con Apple. En este curso encontrarás 5 tips que te van a ayudar a vender \"con fundamento\" los productos del ecosistema de la marca de la manzana. De la mano de quienes día a día se encuentran delante de los clientes, cada píldora te resultará práctica y te ayudará en tus objetivos de venta.",
+        "descripcion": "En Electrónica, saber las características técnicas no basta para resolver múltiples situaciones que día a día encuentras en la tienda. Y menos con Apple. En este curso encontrarás 5 tips que te van a ayudar a vender \"con fundamento\" los productos del ecosistema de la marca de la manzana. De la mano de quienes día a día se encuentran delante de los clientes, cada píldora te resultará práctica y te ayudará en tus objetivos de venta.",
+        "temario": [
+            "Guide.",
+            "Pásate a Mac.",
+            "Mejorar fotos.",
+            "Airtag.",
+            "Demo rápida."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/780d7e6c948d10019181e3c1af240000?type=9882927d138b100019b928e75843018d"
+    },
+    {
+        "id": "curso-1794755625174",
+        "titulo": "ELECTRÓNICA. GOOGLE PIXEL 11",
+        "categoria": "Telefonía",
+        "modalidad": "Online",
+        "nivel": "Intermedio",
+        "duracion": "8 minutos",
+        "fecha": "Acceso inmediato",
+        "publico": "Todos",
+        "resumen": "Solo 8 minutos necesitarás para conocer aspectos interesantes de los nuevos Google Pixel 11. Te sorprenderá lo que Google ha preparado para sus nuevos modelos.",
+        "descripcion": "Solo 8 minutos necesitarás para conocer aspectos interesantes de los nuevos Google Pixel 11. Te sorprenderá lo que Google ha preparado para sus nuevos modelos.",
+        "temario": [
+            "Google, algo más que un teléfono.",
+            "Tres detalles de Google Pixel 11.",
+            "¿Conoces Hilight?.",
+            "Los watch de Google."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/246f410d3d321000a113d485c7f80000?type=9882927d138b100019b928e75843018d"
+    },
+    {
+        "id": "curso-1794755503793",
+        "titulo": "ELECTRÓNICA. NO TE OLVIDES DE MCAFEE",
+        "categoria": "Informática",
+        "modalidad": "Online",
+        "nivel": "Intermedio",
+        "duracion": "13 minutos",
+        "fecha": "Acceso inmediato",
+        "publico": "Todos",
+        "resumen": "McAfee no es solo un antivirus. Es un ecosistema de protección indispensable para nuestros clientes y su seguridad. Pero es necesario que estos sepan que lo necesitan. Para ello, el vendedor deberá dominar todas las características del producto con el fin de buscar la solución personalizada para cada necesidad de nuestros clientes.",
+        "descripcion": "McAfee no es solo un antivirus. Es un ecosistema de protección indispensable para nuestros clientes y su seguridad. Pero es necesario que estos sepan que lo necesitan. Para ello, el vendedor deberá dominar todas las características del producto con el fin de buscar la solución personalizada para cada necesidad de nuestros clientes.",
+        "temario": [
+            "McAfee Livesafe.",
+            "McAfee Fraudes",
+            "Renovación automática."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/4fd481c85a771001e282be26f68e0000?type=9882927d138b100019b928e75843018d"
+    },
+    {
+        "id": "curso-1794755379658",
+        "titulo": "ELECTRÓNICA. OJO AL DATO SEPTIEMBRE 2026",
+        "categoria": "Electrónica",
+        "modalidad": "Online",
+        "nivel": "Intermedio",
+        "duracion": "29 minutos",
+        "fecha": "Acceso inmediato",
+        "publico": "Todos",
+        "resumen": "Nueva entrega de \"tips\" que te van a ayudar a \"conectar\" con tus clientes. En esta ocasión, la propuesta es muy variada, fotografía, informática, telefonía, videojuegos...",
+        "descripcion": "Nueva entrega de \"tips\" que te van a ayudar a \"conectar\" con tus clientes. En esta ocasión, la propuesta es muy variada, fotografía, informática, telefonía, videojuegos...",
+        "temario": [
+            "McAfee. Telefonía.",
+            "McAfee. Cómo venderlo.",
+            "Lumix. Tres tipos de cámaras.",
+            "La IA de Oppo.",
+            "Collage de Oppo.",
+            "Mandos: PlayStation versus XBox.",
+            "Panasonic DECT bloqueo de llamadas."
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/68adef866b721000b83dc72b52020000?type=9882927d138b100019b928e75843018d"
+    },
+    {
+        "id": "curso-1794755221729",
+        "titulo": "ELECTRÓNICA. OYE SIRI. APPLE eSIM",
+        "categoria": "Electrónica",
+        "modalidad": "Online",
+        "nivel": "Intermedio",
+        "duracion": "15 minutos",
+        "fecha": "Acceso inmediato",
+        "publico": "Todos",
+        "resumen": "Ya está aquí la eSIM de Apple. Todos los trucos, las características, la orientación comercial y... todos sus secretos en esta formación que solo te llevará unos minutos.",
+        "descripcion": "Ya está aquí la eSIM de Apple. Todos los trucos, las características, la orientación comercial y... todos sus secretos en esta formación que solo te llevará unos minutos.",
+        "temario": [
+            "ELECTRÓNICA. OYE SIRI. APPLE eSIM"
+        ],
+        "objetivos": [
+            "Aprender"
+        ],
+        "requisitos": "Ninguno",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/f485f08f599610018c24b222c55e0000?type=9882927d138b100019b928e75843018d"
+    },
+    {
+        "id": "curso-tel-1",
+        "titulo": "ELECTRÓNICA. NUEVAS GAFAS INTELIGENTES META",
+        "categoria": "Telefonía",
+        "modalidad": "Online",
+        "nivel": "Básico",
+        "duracion": "8 minutos",
+        "fecha": "Acceso inmediato",
+        "publico": "Equipos comerciales de telefonía y movilidad",
+        "resumen": "Descubre cómo sacar partido a las funciones de inteligencia artificial en dispositivos móviles, conectividad 5G, eSIM y traspaso seguro de datos.",
+        "descripcion": "Aprende a guiar al cliente en la elección de su próximo terminal según su perfil de uso, destacando la integración con relojes inteligentes, auriculares inalámbricos y servicios en la nube.",
+        "temario": [
+            "Comparativa de procesadores, pantallas LTPO y autonomía",
+            "Herramientas de IA en el día a día: traducción, edición y resumen",
+            "Gestión de eSIM, seguridad biométrica y copias en la nube",
+            "Venta cruzada de ecosistema: wearables y protección integral"
+        ],
+        "objetivos": [
+            "Potenciar la vinculación de accesorios del ecosistema móvil"
+        ],
+        "requisitos": "Ninguno.",
+        "enlaceInscripcion": "https://wd3.myworkday.com/elcorteingles/learning/course/924b4b2385b61001a33f3ba729b60000?type=9882927d138b100019b928e75843018d"
+    }
+];
+        const STORAGE_KEY = 'academia_catalogo_cursos_v2';
+        let courses = [];
+        let isEditorMode = false;
+        let selectedCategory = 'Todas';
+        let selectedModality = 'Todas';
+        let selectedLevel = 'Todos';
+        let searchQuery = '';
+        let currentViewingCourse = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            loadCourses();
+            setupEventListeners();
+            renderCategoryPills();
+            renderCourses();
+        });
+
+        function loadCourses() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    courses = JSON.parse(saved);
+                } catch (e) {
+                    courses = [...CURSOS_DATA];
+                }
+            } else {
+                courses = [...CURSOS_DATA];
+            }
+        }
+
+        function saveCoursesToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
+        }
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery === '');
+                renderCourses();
+            });
+
+            document.getElementById('modalityFilter').addEventListener('change', (e) => {
+                selectedModality = e.target.value;
+                renderCourses();
+            });
+
+            document.getElementById('levelFilter').addEventListener('change', (e) => {
+                selectedLevel = e.target.value;
+                renderCourses();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeDetailModal();
+                    closeCourseForm();
+                    closeExportModal();
+                    closeConfirmModal();
+                    closeLoginModal(false);
+                }
+            });
+        }
+
+        function handleEditorToggleAttempt(checkbox) {
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                document.getElementById('loginError').classList.add('hidden');
+                document.getElementById('loginUser').value = '';
+                document.getElementById('loginPass').value = '';
+                document.getElementById('loginModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                isEditorMode = false;
+                document.getElementById('adminBar').classList.add('hidden');
+                renderCourses();
+                showToast('Modo Editor desactivado');
+            }
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value;
+
+            if (user === 'odinfantes' && pass === '08101976') {
+                closeLoginModal(true);
+                isEditorMode = true;
+                document.getElementById('editorToggle').checked = true;
+                document.getElementById('adminBar').classList.remove('hidden');
+                renderCourses();
+                showToast('Sesión iniciada como Modo Editor');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function closeLoginModal(success) {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.body.style.overflow = '';
+            if (!success) {
+                document.getElementById('editorToggle').checked = false;
+            }
+        }
+
+        function toggleEditorFromFooter() {
+            const toggle = document.getElementById('editorToggle');
+            if (!isEditorMode) {
+                toggle.checked = true;
+                handleEditorToggleAttempt(toggle);
+            } else {
+                toggle.checked = false;
+                handleEditorToggleAttempt(toggle);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderCategoryPills() {
+            const container = document.getElementById('categoryFilters');
+            const extraCategories = [...new Set(courses.map(c => c.categoria))].filter(cat => !AREAS_OFICIALES.includes(cat));
+            const categories = [...AREAS_OFICIALES, ...extraCategories];
+            
+            if (!categories.includes(selectedCategory)) {
+                selectedCategory = 'Todas';
+            }
+
+            container.innerHTML = categories.map(cat => {
+                const isActive = cat === selectedCategory;
+                const baseClasses = "px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all cursor-pointer select-none border";
+                const activeClasses = isActive 
+                    ? "bg-[#00784E] text-white border-[#00784E] shadow-eci" 
+                    : "bg-white text-[#141F1B] hover:bg-[#E6F2ED]/60 hover:border-[#00784E]/40 border-[#D5E3DD]";
+                
+                return `<button onclick="selectCategory('${escapeHtml(cat)}')" class="${baseClasses} ${activeClasses}">${escapeHtml(cat)}</button>`;
+            }).join('');
+        }
+
+        function selectCategory(category) {
+            selectedCategory = category;
+            renderCategoryPills();
+            renderCourses();
+        }
+
+        function getBadgeStyle(type, value) {
+            if (type === 'modality') {
+                switch (value) {
+                    case 'Online': return 'bg-sky-50 text-sky-800 border-sky-200/70';
+                    case 'Presencial': return 'bg-amber-50 text-amber-800 border-amber-200/70';
+                    case 'Híbrido': return 'bg-purple-50 text-purple-800 border-purple-200/70';
+                    default: return 'bg-gray-100 text-gray-700 border-gray-200';
+                }
+            }
+            if (type === 'level') {
+                switch (value) {
+                    case 'Básico': return 'bg-[#E6F2ED] text-[#00784E] border-[#00784E]/20';
+                    case 'Intermedio': return 'bg-teal-50 text-teal-800 border-teal-200/80';
+                    case 'Avanzado': return 'bg-rose-50 text-rose-800 border-rose-200/70';
+                    default: return 'bg-gray-100 text-gray-700 border-gray-200';
+                }
+            }
+            return 'bg-[#F4F8F6] text-[#52635C] border-transparent';
+        }
+
+        function renderCourses() {
+            const grid = document.getElementById('coursesGrid');
+            const emptyState = document.getElementById('emptyState');
+            const countLabel = document.getElementById('resultsCount');
+            const resetBtn = document.getElementById('resetFiltersBtn');
+
+            const filtered = courses.filter(course => {
+                const matchesCat = selectedCategory === 'Todas' || course.categoria === selectedCategory;
+                const matchesMod = selectedModality === 'Todas' || course.modalidad === selectedModality;
+                const matchesLvl = selectedLevel === 'Todos' || course.nivel === selectedLevel;
+                
+                const searchableText = `${course.titulo} ${course.resumen} ${course.categoria} ${course.temario.join(' ')}`.toLowerCase();
+                const matchesSearch = searchQuery === '' || searchableText.includes(searchQuery);
+
+                return matchesCat && matchesMod && matchesLvl && matchesSearch;
+            });
+
+            const hasActiveFilters = selectedCategory !== 'Todas' || selectedModality !== 'Todas' || selectedLevel !== 'Todos' || searchQuery !== '';
+            resetBtn.classList.toggle('hidden', !hasActiveFilters);
+            countLabel.textContent = filtered.length === 1 
+                ? 'Mostrando 1 programa formativo' 
+                : `Mostrando ${filtered.length} programas formativos`;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(course => `
+                <article class="course-card bg-white rounded-[20px] p-6 shadow-eci-card hover:shadow-eci-card-hover flex flex-col justify-between relative group">
+                    
+                    ${isEditorMode ? `
+                        <div class="flex items-center justify-end gap-1.5 mb-3 pb-3 border-b border-dashed border-[#D5E3DD]">
+                            <button onclick="event.stopPropagation(); openCourseForm('${course.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#F4F8F6] hover:bg-[#00784E] text-[#141F1B] hover:text-white text-xs font-medium transition-colors">
+                                Editar
+                            </button>
+                            <button onclick="event.stopPropagation(); confirmDeleteCourse('${course.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-600 text-red-600 hover:text-white text-xs font-medium transition-colors">
+                                Eliminar
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    <div class="cursor-pointer" onclick="openDetailModal('${course.id}')">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5">
+                            <span class="px-2.5 py-0.5 rounded-md bg-[#E6F2ED] text-[11px] font-semibold uppercase tracking-wider text-[#00784E]">
+                                ${escapeHtml(course.categoria)}
+                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${getBadgeStyle('modality', course.modalidad)}">
+                                    ${escapeHtml(course.modalidad)}
+                                </span>
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${getBadgeStyle('level', course.nivel)}">
+                                    ${escapeHtml(course.nivel)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <h2 class="text-lg sm:text-xl font-semibold text-[#141F1B] tracking-tight leading-snug group-hover:text-[#00784E] transition-colors">
+                            ${escapeHtml(course.titulo)}
+                        </h2>
+
+                        <p class="mt-2.5 text-sm text-[#52635C] leading-relaxed line-clamp-3">
+                            ${escapeHtml(course.resumen)}
+                        </p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-[#D5E3DD]/70 flex items-center justify-between gap-2">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-1.5 text-xs font-medium text-[#141F1B]">
+                                <span>${escapeHtml(course.duracion)}</span>
+                            </div>
+                            <div class="text-[11px] text-[#52635C]">
+                                ${escapeHtml(course.fecha)}
+                            </div>
+                        </div>
+
+                        <button onclick="openDetailModal('${course.id}')" class="inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-[#00784E] hover:text-[#005C3B] py-1.5 px-3.5 rounded-full bg-[#E6F2ED]/60 hover:bg-[#E6F2ED] transition-colors">
+                            <span>Ver temario</span>
+                        </button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function openDetailModal(courseId) {
+            const course = courses.find(c => c.id === courseId);
+            if (!course) return;
+            currentViewingCourse = course;
+
+            document.getElementById('modalBadges').innerHTML = `
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E6F2ED] text-[#00784E] border border-[#00784E]/20">${escapeHtml(course.categoria)}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium border ${getBadgeStyle('modality', course.modalidad)}">${escapeHtml(course.modalidad)}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium border ${getBadgeStyle('level', course.nivel)}">${escapeHtml(course.nivel)}</span>
+            `;
+
+            document.getElementById('modalTitle').textContent = course.titulo;
+            document.getElementById('modalDuration').textContent = course.duracion;
+            document.getElementById('modalDate').textContent = course.fecha;
+            document.getElementById('modalAudience').textContent = course.publico || 'Todos los equipos';
+            document.getElementById('modalDescription').textContent = course.descripcion || course.resumen;
+
+            const syllabusContainer = document.getElementById('modalSyllabus');
+            syllabusContainer.innerHTML = course.temario.map((item, idx) => `
+                <div class="flex items-start gap-3 p-3 rounded-xl bg-[#F4F8F6] border border-[#D5E3DD]">
+                    <span class="w-6 h-6 rounded-full bg-white text-[#00784E] text-xs font-bold flex items-center justify-center shrink-0 shadow-sm mt-0.5 border border-[#D5E3DD]">${idx + 1}</span>
+                    <span class="text-sm text-[#141F1B] font-medium leading-snug">${escapeHtml(item)}</span>
+                </div>
+            `).join('');
+
+            const objectivesContainer = document.getElementById('modalObjectives');
+            const objs = (course.objetivos && course.objetivos.length > 0) ? course.objetivos : ['Dominar los conceptos clave'];
+            objectivesContainer.innerHTML = objs.map(obj => `
+                <li class="flex items-start gap-2">
+                    <span class="text-[#00784E] font-bold">✓</span>
+                    <span>${escapeHtml(obj)}</span>
+                </li>
+            `).join('');
+
+            document.getElementById('modalRequirements').textContent = course.requisitos || 'Ninguno.';
+
+            const enrollBtn = document.getElementById('enrollActionBtn');
+            enrollBtn.disabled = false;
+            enrollBtn.innerHTML = `<span>${course.enlaceInscripcion ? 'Ir a inscripción' : 'Solicitar plaza'}</span>`;
+
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function handleEnroll() {
+            if (!currentViewingCourse) return;
+            if (currentViewingCourse.enlaceInscripcion) {
+                window.open(currentViewingCourse.enlaceInscripcion, '_blank', 'noopener,noreferrer');
+                return;
+            }
+            showToast(`Preinscripción solicitada para "${currentViewingCourse.titulo}"`);
+        }
+
+        function openCourseForm(courseId = null) {
+            const form = document.getElementById('courseForm');
+            form.reset();
+            document.getElementById('editCourseId').value = courseId || '';
+            document.getElementById('formModalTitle').textContent = courseId ? 'Editar Curso' : 'Añadir Nuevo Curso';
+
+            if (courseId) {
+                const c = courses.find(item => item.id === courseId);
+                if (c) {
+                    document.getElementById('fieldTitle').value = c.titulo;
+                    document.getElementById('fieldCategory').value = c.categoria;
+                    document.getElementById('fieldModality').value = c.modalidad;
+                    document.getElementById('fieldLevel').value = c.nivel;
+                    document.getElementById('fieldDuration').value = c.duracion;
+                    document.getElementById('fieldDate').value = c.fecha;
+                    document.getElementById('fieldAudience').value = c.publico || '';
+                    document.getElementById('fieldSummary').value = c.resumen;
+                    document.getElementById('fieldDescription').value = c.descripcion || '';
+                    document.getElementById('fieldSyllabus').value = (c.temario || []).join('\n');
+                    document.getElementById('fieldObjectives').value = (c.objetivos || []).join('\n');
+                    document.getElementById('fieldRequirements').value = c.requisitos || '';
+                    document.getElementById('fieldLink').value = c.enlaceInscripcion || '';
+                }
+            }
+
+            document.getElementById('formModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCourseForm() {
+            document.getElementById('formModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function saveCourseForm(e) {
+            e.preventDefault();
+            const id = document.getElementById('editCourseId').value;
+            
+            const syllabusLines = document.getElementById('fieldSyllabus').value.split('\n').map(l => l.trim()).filter(Boolean);
+            const objectiveLines = document.getElementById('fieldObjectives').value.split('\n').map(l => l.trim()).filter(Boolean);
+
+            const courseData = {
+                id: id || 'curso-' + Date.now(),
+                titulo: document.getElementById('fieldTitle').value.trim(),
+                categoria: document.getElementById('fieldCategory').value.trim(),
+                modalidad: document.getElementById('fieldModality').value,
+                nivel: document.getElementById('fieldLevel').value,
+                duracion: document.getElementById('fieldDuration').value.trim(),
+                fecha: document.getElementById('fieldDate').value.trim(),
+                publico: document.getElementById('fieldAudience').value.trim() || 'Todos',
+                resumen: document.getElementById('fieldSummary').value.trim(),
+                descripcion: document.getElementById('fieldDescription').value.trim() || document.getElementById('fieldSummary').value.trim(),
+                temario: syllabusLines.length > 0 ? syllabusLines : ['Módulo 1'],
+                objetivos: objectiveLines.length > 0 ? objectiveLines : ['Aprender'],
+                requisitos: document.getElementById('fieldRequirements').value.trim() || 'Ninguno',
+                enlaceInscripcion: document.getElementById('fieldLink').value.trim()
+            };
+
+            if (id) {
+                const index = courses.findIndex(c => c.id === id);
+                if (index !== -1) courses[index] = courseData;
+                showToast('Curso actualizado');
+            } else {
+                courses.unshift(courseData);
+                showToast('Curso añadido');
+            }
+
+            saveCoursesToStorage();
+            renderCategoryPills();
+            renderCourses();
+            closeCourseForm();
+        }
+
+        function confirmDeleteCourse(courseId) {
+            const course = courses.find(c => c.id === courseId);
+            if (!course) return;
+
+            document.getElementById('confirmTitle').textContent = 'Eliminar curso';
+            document.getElementById('confirmMessage').textContent = `¿Seguro que deseas eliminar "${course.titulo}"?`;
+            
+            const execBtn = document.getElementById('confirmExecuteBtn');
+            execBtn.onclick = () => {
+                courses = courses.filter(c => c.id !== courseId);
+                saveCoursesToStorage();
+                renderCategoryPills();
+                renderCourses();
+                closeConfirmModal();
+                showToast('Curso eliminado');
+            };
+
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function openResetConfirm() {
+            document.getElementById('confirmTitle').textContent = 'Restaurar originales';
+            document.getElementById('confirmMessage').textContent = 'Se restablecerán los cursos predeterminados.';
+            
+            const execBtn = document.getElementById('confirmExecuteBtn');
+            execBtn.onclick = () => {
+                localStorage.removeItem(STORAGE_KEY);
+                courses = [...CURSOS_DATA];
+                renderCategoryPills();
+                renderCourses();
+                closeConfirmModal();
+                showToast('Catálogo restaurado');
+            };
+
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+        }
+
+        function openExportModal() {
+            const formattedJson = JSON.stringify(courses, null, 4);
+            document.getElementById('exportCodeArea').value = `const CURSOS_DATA = ${formattedJson};`;
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function copyExportCode() {
+            const textarea = document.getElementById('exportCodeArea');
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Código copiado al portapapeles');
+            } catch (err) {
+                showToast('Copia manual requerida');
+            }
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            searchQuery = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            renderCourses();
+            input.focus();
+        }
+
+        function resetAllFilters() {
+            selectedCategory = 'Todas';
+            selectedModality = 'Todas';
+            selectedLevel = 'Todos';
+            searchQuery = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            document.getElementById('modalityFilter').value = 'Todas';
+            document.getElementById('levelFilter').value = 'Todos';
+            renderCategoryPills();
+            renderCourses();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
