@@ -767,8 +767,11 @@
     }
 ];
         const STORAGE_KEY = 'academia_catalogo_cursos_v2';
+        const WORKER_URL = 'sync-cursos-github.pichiridersmadrid.workers.dev';
+
         let courses = [];
         let isEditorMode = false;
+        let editorCredentials = { user: '', pass: '' };
         let selectedCategory = 'Todas';
         let selectedModality = 'Todas';
         let selectedLevel = 'Todos';
@@ -783,7 +786,7 @@
             renderCourses();
         });
 
-        function loadCourses() {
+       async function loadCourses() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 try {
@@ -794,12 +797,54 @@
             } else {
                 courses = [...CURSOS_DATA];
             }
+
+            try {
+                const res = await fetch(`./cursos.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (res.ok) {
+                    const remoteCourses = await res.json();
+                    if (Array.isArray(remoteCourses) && remoteCourses.length > 0) {
+                        courses = remoteCourses;
+                        saveCoursesToStorage();
+                        renderCategoryPills();
+                        renderCourses();
+                    }
+                }
+            } catch (err) {
+                console.warn('Usando copia local de cursos:', err);
+            }
         }
 
         function saveCoursesToStorage() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
         }
+async function syncCoursesToGitHub() {
+            if (!editorCredentials.user || !editorCredentials.pass) {
+                showToast('Guardado local (inicia sesión de nuevo para sincronizar)');
+                return;
+            }
 
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'save',
+                        username: editorCredentials.user,
+                        password: editorCredentials.pass,
+                        courses: courses
+                    })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Error al actualizar GitHub');
+                }
+                showToast('Guardado y publicado en GitHub');
+            } catch (err) {
+                console.error(err);
+                showToast('Guardado local; revisa la conexión con GitHub');
+            }
+        }
         function setupEventListeners() {
             const searchInput = document.getElementById('searchInput');
             searchInput.addEventListener('input', (e) => {
@@ -829,7 +874,7 @@
             });
         }
 
-        function handleEditorToggleAttempt(checkbox) {
+       function handleEditorToggleAttempt(checkbox) {
             if (checkbox.checked) {
                 checkbox.checked = false;
                 document.getElementById('loginError').classList.add('hidden');
@@ -839,26 +884,47 @@
                 document.body.style.overflow = 'hidden';
             } else {
                 isEditorMode = false;
+                editorCredentials = { user: '', pass: '' };
                 document.getElementById('adminBar').classList.add('hidden');
                 renderCourses();
                 showToast('Modo Editor desactivado');
             }
         }
 
-        function handleLoginSubmit(e) {
+        async function handleLoginSubmit(e) {
             e.preventDefault();
             const user = document.getElementById('loginUser').value.trim();
             const pass = document.getElementById('loginPass').value;
+            const errorEl = document.getElementById('loginError');
+            errorEl.classList.add('hidden');
 
-            if (user === 'odinfantes' && pass === '08101976') {
-                closeLoginModal(true);
-                isEditorMode = true;
-                document.getElementById('editorToggle').checked = true;
-                document.getElementById('adminBar').classList.remove('hidden');
-                renderCourses();
-                showToast('Sesión iniciada como Modo Editor');
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: user,
+                        password: pass
+                    })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.ok) {
+                    editorCredentials = { user, pass };
+                    closeLoginModal(true);
+                    isEditorMode = true;
+                    document.getElementById('editorToggle').checked = true;
+                    document.getElementById('adminBar').classList.remove('hidden');
+                    renderCourses();
+                    showToast('Sesión iniciada como Modo Editor');
+                } else {
+                    errorEl.textContent = data.error || 'Usuario o contraseña incorrectos.';
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorEl.textContent = 'Error de conexión al validar credenciales.';
+                errorEl.classList.remove('hidden');
             }
         }
 
@@ -1140,6 +1206,7 @@
             }
 
             saveCoursesToStorage();
+            syncCoursesToGitHub();
             renderCategoryPills();
             renderCourses();
             closeCourseForm();
@@ -1156,6 +1223,7 @@
             execBtn.onclick = () => {
                 courses = courses.filter(c => c.id !== courseId);
                 saveCoursesToStorage();
+                syncCoursesToGitHub();
                 renderCategoryPills();
                 renderCourses();
                 closeConfirmModal();
